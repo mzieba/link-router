@@ -1,0 +1,138 @@
+name: Release Please
+
+# Maintains a release PR from conventional commits on main. When that PR is
+# merged, release-please tags vX.Y.Z and creates a *draft* GitHub Release, then
+# the build steps below (gated on release_created) compile the binaries, attach
+# them to that draft, and publish it. A second release-please invocation at the
+# end of the job then opens the next release PR. Each step below carries the
+# reason it is shaped that way.
+#
+# The tag is deliberately un-prefixed (include-component-in-tag: false in
+# release-please-config.json): `go install github.com/mzieba/link-router@latest`
+# only resolves plain vX.Y.Z tags at the module root.
+#
+# The build MUST live in this workflow, not a separate `release: published` one:
+# release-please publishes the Release using the default GITHUB_TOKEN, and GitHub
+# does not fire workflow triggers for events created by GITHUB_TOKEN, so a
+# separate release-triggered workflow would never run.
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      # Tag and create the draft release only. The next release PR is opened by
+      # the last step in this job, after the draft has been published, because
+      # release-please ignores draft releases when it looks for the previous
+      # release: in one combined invocation it logs "Expected 1 releases, only
+      # found 0", rescans the whole history and proposes a release that repeats
+      # everything already shipped.
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        id: release
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          skip-github-pull-request: true
+
+      # Everything below runs only when a release was just created (release PR merged).
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: ${{ steps.release.outputs.release_created }}
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        if: ${{ steps.release.outputs.release_created }}
+        with:
+          go-version-file: go.mod
+
+      - name: Install build tools
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y imagemagick librsvg2-bin
+          go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@latest
+
+      # Produces dist/link-router-{linux-amd64,linux-arm64,windows-amd64.exe}
+      # plus dist/SHA256SUMS.
+      - name: Build release artifacts
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          make icon
+          make dist VERSION=${{ steps.release.outputs.version }}
+
+      # The release is still a draft (draft: true in release-please-config.json)
+      # because this repository has immutable releases enabled: a published
+      # release is sealed, and uploading to one fails with "HTTP 422: Cannot
+      # upload assets to an immutable release".
+      - name: Upload artifacts to the draft release
+        if: ${{ steps.release.outputs.release_created }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload ${{ steps.release.outputs.tag_name }} \
+            dist/link-router-linux-amd64 \
+            dist/link-router-linux-arm64 \
+            dist/link-router-windows-amd64.exe \
+            dist/SHA256SUMS \
+            --repo ${{ github.repository }}
+
+      # Sealing the release happens here, once every asset is in place.
+      - name: Publish the release
+        if: ${{ steps.release.outputs.release_created }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release edit ${{ steps.release.outputs.tag_name }} \
+            --draft=false \
+            --latest \
+            --repo ${{ github.repository }}
+
+      # Second invocation: open or refresh the release PR. By now the release
+      # from this run (if any) is published, so release-please finds it and
+      # counts only the commits made since it.
+      - name: Open or update the release PR
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          skip-github-release: true
+
+      # When code signing is enabled, move these steps ABOVE "Publish the
+      # release": the signed exe and its checksums have to reach the draft
+      # before it is sealed.
+      # - name: Upload unsigned exe as a workflow artifact
+      #   if: ${{ steps.release.outputs.release_created }}
+      #   id: unsigned
+      #   uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      #   with:
+      #     name: unsigned-exe
+      #     path: dist/link-router-windows-amd64.exe
+      #
+      # - name: Sign the exe with SignPath
+      #   if: ${{ steps.release.outputs.release_created }}
+      #   uses: signpath/github-action-submit-signing-request@v1
+      #   with:
+      #     api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+      #     organization-id: <YOUR_ORG_ID>
+      #     project-slug: link-router
+      #     signing-policy-slug: release-signing
+      #     artifact-configuration-slug: <YOUR_ARTIFACT_CONFIG_SLUG>
+      #     github-artifact-id: ${{ steps.unsigned.outputs.artifact-id }}
+      #     wait-for-completion: true
+      #     output-artifact-directory: signed
+      #
+      # - name: Upload signed exe and checksums to the release
+      #   if: ${{ steps.release.outputs.release_created }}
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   run: |
+      #     mv signed/link-router-windows-amd64.exe dist/
+      #     (cd dist && sha256sum link-router-* > SHA256SUMS)
+      #     gh release upload ${{ steps.release.outputs.tag_name }} \
+      #       dist/link-router-windows-amd64.exe \
+      #       dist/SHA256SUMS \
+      #       --repo ${{ github.repository }}

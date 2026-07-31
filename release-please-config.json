@@ -1,0 +1,10 @@
+{
+  "packages": {
+    ".": {
+      "release-type": "go",
+      "package-name": "link-router",
+      "include-component-in-tag": false,
+      "draft": true
+    }
+  }
+}

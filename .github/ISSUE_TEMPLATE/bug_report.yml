@@ -1,0 +1,69 @@
+name: Bug report
+description: Something does not work as documented
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `link-router version`.
+      placeholder: link-router 1.0.2
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Linux
+        - Windows
+    validations:
+      required: true
+
+  - type: input
+    id: os-details
+    attributes:
+      label: OS details
+      description: Distribution and desktop environment, or Windows version.
+      placeholder: Fedora 42 / GNOME 48 (Wayland), or Windows 11 24H2
+    validations:
+      required: true
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Config
+      description: >
+        Your config.toml, with private hostnames replaced by placeholders.
+        Please keep the rule structure intact so the matching behaviour is
+        reproducible.
+      render: toml
+    validations:
+      required: false
+
+  - type: textarea
+    id: test-output
+    attributes:
+      label: Output of `link-router test <url>`
+      description: For routing problems, the dry-run output for the URL that misbehaved.
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant lines from link-router.log
+      description: The log sits next to your config file.
+      render: shell
+    validations:
+      required: false

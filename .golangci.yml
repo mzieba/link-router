@@ -1,0 +1,11 @@
+version: "2"
+
+linters:
+  settings:
+    errcheck:
+      # Writes to stdout and to in-memory buffers cannot fail in any way the
+      # CLI could act on, so checking them adds noise without adding safety.
+      exclude-functions:
+        - fmt.Fprint
+        - fmt.Fprintf
+        - fmt.Fprintln

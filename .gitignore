@@ -1,0 +1,17 @@
+# Built binaries
+/link-router
+/link-router.exe
+/dist/
+
+# Generated Windows resource (from versioninfo.json + icon.ico)
+/resource_windows_amd64.syso
+
+# Runtime logs
+*.log
+
+# Editor
+.vscode/
+.idea/
+
+# SDD scratch (progress ledger, review packages)
+.superpowers/

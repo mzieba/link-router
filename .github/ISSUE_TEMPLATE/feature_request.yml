@@ -1,0 +1,28 @@
+name: Feature request
+description: Suggest a capability or improvement
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do
+      description: The routing problem or workflow that Link Router cannot handle today.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like it to do
+      description: >
+        If it involves config, sketch the TOML you would want to write.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Workarounds you have tried
+      description: Existing rules, wrapper scripts, or other tools, and why they fall short.
+    validations:
+      required: false
