@@ -1,6 +1,6 @@
 # <img src="assets/icon.svg" alt="Link Router icon" width="32" height="32"> Link Router
 
-[![Go Version](https://img.shields.io/github/goversion/mzieba/link-router?style=flat-square)](https://golang.org/)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/mzieba/link-router?style=flat-square)](https://golang.org/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/mzieba/link-router/ci.yml?branch=main&style=flat-square&label=ci)](https://github.com/mzieba/link-router/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/mzieba/link-router?style=flat-square)](https://github.com/mzieba/link-router/releases/latest)
