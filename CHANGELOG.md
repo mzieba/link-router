@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/mzieba/link-router/compare/v1.4.0...v1.4.1) (2026-10-07)
+
+
+### Bug Fixes
+
+* bump golang.org/x/sys from 0.47.0 to 0.48.0 ([#4](https://github.com/mzieba/link-router/issues/4)) ([2df28f2](https://github.com/mzieba/link-router/commit/2df28f2c6976ab4b4f2c5e26635c6319e9ae2bd1))
+
 ## [1.4.0](https://github.com/mzieba/link-router/compare/v1.0.0...v1.4.0) (2026-07-31)
 
 
